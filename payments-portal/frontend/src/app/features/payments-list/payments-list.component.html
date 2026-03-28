@@ -1,0 +1,105 @@
+<section class="page">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Payments</h1>
+      <p class="page-subtitle">
+        @if (!loading() && !error()) {
+          {{ payments().length }} transaction{{ payments().length !== 1 ? 's' : '' }} total
+        }
+      </p>
+    </div>
+    <a routerLink="/payments/new" class="btn-primary">
+      <span class="btn-icon">+</span>
+      Add Payment
+    </a>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="state-container">
+      <div class="spinner"></div>
+      <p>Loading payments…</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (error()) {
+    <div class="state-container state-error">
+      <span class="state-icon">⚠</span>
+      <p>{{ error() }}</p>
+      <button class="btn-ghost" (click)="loadPayments()">Retry</button>
+    </div>
+  }
+
+  <!-- Empty -->
+  @if (!loading() && !error() && payments().length === 0) {
+    <div class="state-container">
+      <span class="state-icon">◈</span>
+      <p class="state-title">No payments yet</p>
+      <p class="state-desc">Create your first payment to get started.</p>
+      <a routerLink="/payments/new" class="btn-primary">Add Payment</a>
+    </div>
+  }
+
+  <!-- Table -->
+  @if (!loading() && !error() && payments().length > 0) {
+    <div class="table-wrapper">
+      <table class="payments-table">
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Amount</th>
+            <th>Currency</th>
+            <th>Created At</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (payment of payments(); track payment.id) {
+            <tr class="table-row">
+              <td>
+                <span class="reference">{{ payment.reference }}</span>
+              </td>
+              <td class="amount-cell">
+                {{ payment.amount | number:'1.2-2' }}
+              </td>
+              <td>
+                <app-currency-badge [currency]="payment.currency" />
+              </td>
+              <td class="date-cell">
+                {{ payment.createdAt | date:'dd MMM yyyy, HH:mm' : 'UTC' }}
+              </td>
+              <td class="actions-cell">
+                <button
+                  class="action-btn action-btn--edit"
+                  (click)="editPayment(payment)"
+                  title="Edit payment">
+                  ✎
+                </button>
+                <button
+                  class="action-btn action-btn--delete"
+                  (click)="confirmDelete(payment)"
+                  title="Delete payment">
+                  ✕
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+<!-- Confirm delete dialog -->
+<app-confirm-dialog
+  [visible]="!!deleteTarget()"
+  title="Delete Payment"
+  [message]="'Delete payment ' + (deleteTarget()?.reference ?? '') + '? This action cannot be undone.'"
+  confirmLabel="Delete"
+  (confirmed)="executeDelete()"
+  (cancelled)="cancelDelete()" />
+
+<!-- Toasts -->
+<app-toast-container />
